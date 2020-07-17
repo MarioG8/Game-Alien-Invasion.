@@ -1,6 +1,5 @@
 import sys 
 import pygame
-
 from settings import Settings
 from ship import Ship
 
@@ -21,17 +20,26 @@ class AlienInvasion:
     def run_game(self):
         """Start the main game loop."""
         while True:
-            #Waiting for a key or mouse button to be pressed.
+            self._check_events()
+            self._update_screen()
+
+
+    def _check_events(self):
+        #Waiting for a key or mouse button to be pressed.
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
 
-        #Screen refresh in each iteration of the loop
-            self.screen.fill(self.settings.bg_color)
-            self.ship.blitme()
 
-            #Display the last modified screen.
-            pygame.display.flip()
+    def _update_screen(self):
+        """Updating images and going to a new screen"""
+            #Screen refresh in each iteration of the loop
+        self.screen.fill(self.settings.bg_color)
+        self.ship.blitme()
+
+        #Display the last modified screen.
+        pygame.display.flip()
+
 
 if __name__ == '__main__':
     # Creating a copy of the game and launching it.
