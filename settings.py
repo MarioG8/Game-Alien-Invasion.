@@ -11,3 +11,4 @@ class Settings:
         #Spacecraft settings speed.
         self.ship_speed = 1.5
         
+        
