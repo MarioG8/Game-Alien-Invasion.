@@ -1,6 +1,10 @@
 import sys 
+from time import sleep
+
 import pygame
+
 from settings import Settings
+from game_stats import GameStats
 from ship import Ship
 from bullet import Bullet
 from alien import Alien
@@ -17,6 +21,9 @@ class AlienInvasion:
         self.settings.screen_width = self.screen.get_rect().width
         self.settings.screen_height = self.screen.get_rect().height
         pygame.display.set_caption("Alien Invasion")
+
+        # Creation of a copy of the game statistics.
+        self.stats = GameStats(self)
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
@@ -73,11 +80,6 @@ class AlienInvasion:
 
     def _update_bullets(self):
         """Update missiles and remove missiles not visible on screen."""
-        collision = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
-
-        if not self.aliens:
-            self.bullets.empty()
-            self._create_fleet()
         # Updating the position of the missiles.
         self.bullets.update()
 
@@ -86,13 +88,50 @@ class AlienInvasion:
                 if bullet.rect.bottom <= 0:
                     self.bullets.remove(bullet)
 
+        self._check_bullet_alien_collision()
+
+    
+    def _check_bullet_alien_collision(self):
+        """Collision reaction between missile and foreign."""
+        # Removal of all projectiles and aliens that have collided.
+        collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
+
+        
+        if not self.aliens:
+            # Get rid of existing missiles and create a new fleet.
+            self.bullets.empty()
+            self._create_fleet()
+
         
 
     def _update_aliens(self):
         """Checking if the alien fleet is at the edge,
         and then updating the position of all aliens in the fleet."""
+
         self._check_fleet_edges()
         self.aliens.update()
+
+        # Wykrywanie kolizji między obcym i statkiem.
+        if pygame.sprite.spritecollideany(self.ship, self.aliens):
+            self._ship_hit()
+
+
+    def _ship_hit(self):
+        """Alien hitting a ship."""
+        # Zmniejszenie wartości przechowywanej w ships_left.
+        self.stats.ships_left -= 1
+
+        # Removal of aliens and bullets lists.
+        self.aliens.empty()
+        self.bullets.empty()
+
+        # Create a new fleet and center the ship.
+        self._create_fleet()
+        self.ship.center_ship()
+
+        # Pause ..
+        sleep(0.5)
+
 
     
     def _create_fleet(self):
