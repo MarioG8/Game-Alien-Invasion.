@@ -5,6 +5,7 @@ import pygame
 
 from settings import Settings
 from game_stats import GameStats
+from scoreboard import Scoreboard
 from button import Button
 from ship import Ship
 from bullet import Bullet
@@ -25,7 +26,9 @@ class AlienInvasion:
         pygame.display.set_caption("Alien Invasion")
 
         # Creation of a copy of the game statistics.
+        # And creating an instance of the Scoreboard class.
         self.stats = GameStats(self)
+        self.sb = Scoreboard(self)
 
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
@@ -69,8 +72,12 @@ class AlienInvasion:
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
         if button_clicked and not self.stats.game_active:
             # Reset game settings.
+            self.settings.initialize_dynamic_settings()
+
+            # Reset game statistics.
             self.stats.reset_stats()
             self.stats.game_active = True
+            self.sb.prep_score()
 
             # Removal of aliens and bullets lists.
             self.aliens.empty()
@@ -128,11 +135,18 @@ class AlienInvasion:
         # Removal of all projectiles and aliens that have collided.
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
 
+        if collisions:
+            for aliens in collisions.values():
+                self.stats.score += self.settings.alien_points * len(aliens)
+            self.sb.prep_score()
+            
+            
         
         if not self.aliens:
             # Get rid of existing missiles and create a new fleet.
             self.bullets.empty()
             self._create_fleet()
+            self.settings.increase_speed()
 
         
 
@@ -235,6 +249,9 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+
+        # View scoring information.
+        self.sb.show_score()
 
         # Display the button only when the game is inactive.
         if not self.stats.game_active:
